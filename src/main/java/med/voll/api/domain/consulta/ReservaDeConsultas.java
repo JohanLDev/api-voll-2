@@ -26,7 +26,7 @@ public class ReservaDeConsultas {
     @Autowired
     private List<ValidacionDeConsultas> validadores; // Busca todas las clases que implementan la interfaz
 
-    public void reservar(DatosReservaConsulta datos) throws ValidacionException {
+    public DatosDetalleConsulta reservar(DatosReservaConsulta datos) throws ValidacionException {
 
         if(!pacienteRepository.existsById(datos.idPaciente())){
             throw new ValidacionException("No existe un paciente con el ID informado");
@@ -43,6 +43,8 @@ public class ReservaDeConsultas {
         var paciente = pacienteRepository.findById(datos.idPaciente()).get();
         var consulta = new Consulta(null,medico,paciente,datos.fecha(),null);
         consultaRepository.save(consulta);
+
+        return new DatosDetalleConsulta(consulta);
     }
 
     private Medico elegirMedico(DatosReservaConsulta datos) {
