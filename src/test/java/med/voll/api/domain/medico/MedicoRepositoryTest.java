@@ -23,7 +23,7 @@ import java.time.temporal.TemporalAdjusters;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest // Para indicarle a spring que esta es una clase de test
+@DataJpaTest // Para indicarle a spring que esta es una clase de test - Los datos se limpian en la base de datos automaticamente
 @AutoConfigureTestDatabase(replace =  AutoConfigureTestDatabase.Replace.NONE) // Para que use nuestra base de datos propia para los test
 @ActiveProfiles("test") // Se la da a conocer el nuevo archivo de configuración que deberá usar (ahí tenemos la configuración a la base de datos)
 class MedicoRepositoryTest {
@@ -36,16 +36,34 @@ class MedicoRepositoryTest {
 
     @Test
     @DisplayName("Debera devolver null cuando el médico buscado existe pero no está disponible en esa fecha")
-    void elegirMedicoAleatorioDisponibleEnLaFecha() {
-        var lunesSiguienteALas10 = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atTime(10,0);
+    void elegirMedicoAleatorioDisponibleEnLaFechaEscenario1() {
 
+        // Given o arrange
+        var lunesSiguienteALas10 = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atTime(10,0);
         var medico = registrarMedico("medico 1", "medico@gmail.com" , "12345678", Especialidad.ORTOPEDIA);
         var paciente = registrarPaciente("Paciente 1" , "paciente@gmail.com" , "123456");
         registrarConsulta(medico,paciente,lunesSiguienteALas10);
 
+        // when o act
         var medicoLibre = repository.elegirMedicoAleatorioDisponibleEnLaFecha(Especialidad.ORTOPEDIA,lunesSiguienteALas10);
 
+        // then o assert
         assertThat(medicoLibre).isNull();
+    }
+
+    @Test
+    @DisplayName("Debera devolver médico cuando el médico buscado está disponible")
+    void elegirMedicoAleatorioDisponibleEnLaFechaEscenario2() {
+
+        // Given o arrange
+        var lunesSiguienteALas10 = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atTime(10,0);
+        var medico = registrarMedico("medico 1", "medico@gmail.com" , "12345678", Especialidad.ORTOPEDIA);
+
+        // when o act
+        var medicoLibre = repository.elegirMedicoAleatorioDisponibleEnLaFecha(Especialidad.ORTOPEDIA,lunesSiguienteALas10);
+
+        // then o assert
+        assertThat(medicoLibre).isEqualTo(medico);
     }
 
     private void registrarConsulta(Medico medico, Paciente paciente, LocalDateTime fecha) {
